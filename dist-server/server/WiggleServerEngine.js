@@ -152,7 +152,7 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
                 body: query
               }; // Used for interactive assets
               assetId = query.assetId, displayName = query.displayName, identityId = query.identityId, urlSlug = query.urlSlug;
-              roomName = assetId;
+              roomName = "".concat(urlSlug, "_").concat(assetId);
               this.urlSlug = urlSlug;
               if (roomName) {
                 _context2.next = 10;

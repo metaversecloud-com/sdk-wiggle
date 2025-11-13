@@ -88,7 +88,7 @@ export default class WiggleServerEngine extends ServerEngine {
       const query = parts.query;
       const req = { body: query }; // Used for interactive assets
       const { assetId, displayName, identityId, urlSlug } = query;
-      const roomName = assetId;
+      const roomName = `${urlSlug}_${assetId}`;
       this.urlSlug = urlSlug;
 
       if (!roomName) return;
