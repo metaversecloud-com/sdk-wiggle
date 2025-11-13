@@ -8,7 +8,9 @@ export default class WiggleClientEngine extends ClientEngine {
     const params = new Proxy(new URLSearchParams(window.location.search), {
       get: (searchParams, prop) => searchParams.get(prop),
     });
-    this.roomName = params["assetId"];
+    const assetId = params["assetId"];
+    const urlSlug = params["urlSlug"];
+    this.roomName = `${urlSlug}_${assetId}`;
 
     // show try-again button
     gameEngine.on("objectDestroyed", (obj) => {

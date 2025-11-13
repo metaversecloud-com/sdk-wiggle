@@ -34,7 +34,9 @@ var WiggleClientEngine = /*#__PURE__*/function (_ClientEngine) {
         return searchParams.get(prop);
       }
     });
-    _this.roomName = params["assetId"];
+    var assetId = params["assetId"];
+    var urlSlug = params["urlSlug"];
+    _this.roomName = "".concat(urlSlug, "_").concat(assetId);
 
     // show try-again button
     gameEngine.on("objectDestroyed", function (obj) {
