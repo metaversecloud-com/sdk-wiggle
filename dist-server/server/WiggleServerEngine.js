@@ -33,6 +33,10 @@ function _assertThisInitialized(self) { if (self === void 0) { throw new Referen
 function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 var nameGenerator = require("./NameGenerator");
+var isSessionExpired = function isSessionExpired(error) {
+  var _error$response;
+  return (error === null || error === void 0 ? void 0 : (_error$response = error.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 401 || (error === null || error === void 0 ? void 0 : error.status) === 401 || (error === null || error === void 0 ? void 0 : error.message) === "Invalid session token";
+};
 var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
   _inherits(WiggleServerEngine, _ServerEngine);
   var _super = _createSuper(WiggleServerEngine);
@@ -140,7 +144,7 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
     value: function () {
       var _joinRoom = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(socket) {
         var _this2 = this;
-        var URL, parts, query, req, assetId, displayName, identityId, urlSlug, roomName, _yield$getVisitor, success, visitor, isInZone, profileId, username, makePlayerWiggle;
+        var URL, parts, query, req, assetId, displayName, identityId, urlSlug, roomName, _yield$getVisitor, success, visitor, isInZone, message, profileId, username, makePlayerWiggle;
         return _regeneratorRuntime().wrap(function _callee2$(_context2) {
           while (1) switch (_context2.prev = _context2.next) {
             case 0:
@@ -167,12 +171,13 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
               success = _yield$getVisitor.success;
               visitor = _yield$getVisitor.visitor;
               isInZone = _yield$getVisitor.isInZone;
+              message = _yield$getVisitor.message;
               if (success) {
-                _context2.next = 18;
+                _context2.next = 19;
                 break;
               }
-              return _context2.abrupt("return", socket.emit("error", message));
-            case 18:
+              return _context2.abrupt("return", socket.emit("error", message || "Failed to get visitor"));
+            case 19:
               this.visitor = visitor;
               profileId = visitor.profileId, username = visitor.username;
               if (!this.rooms || !this.rooms[roomName]) {
@@ -210,7 +215,9 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
                             profileId: profileId,
                             uniqueKey: profileId,
                             urlSlug: urlSlug
-                          }]);
+                          }])["catch"](function (error) {
+                            if (isSessionExpired(error)) console.log("Session expired, skipping 'starts' analytics");else console.error("Error updating 'starts' analytics", error);
+                          });
                           (0, _utils.addNewRowToGoogleSheets)([{
                             identityId: identityId,
                             displayName: displayName,
@@ -237,22 +244,24 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
                 profileId: profileId,
                 uniqueKey: profileId,
                 urlSlug: urlSlug
-              }]);
-              _context2.next = 31;
+              }])["catch"](function (error) {
+                if (isSessionExpired(error)) console.log("Session expired, skipping 'joins' analytics");else console.error("Error updating 'joins' analytics", error);
+              });
+              _context2.next = 32;
               break;
-            case 28:
-              _context2.prev = 28;
+            case 29:
+              _context2.prev = 29;
               _context2.t0 = _context2["catch"](0);
               (0, _utils.errorHandler)({
                 error: _context2.t0,
                 functionName: "joinRoom",
                 message: "Error joining room"
               });
-            case 31:
+            case 32:
             case "end":
               return _context2.stop();
           }
-        }, _callee2, this, [[0, 28]]);
+        }, _callee2, this, [[0, 29]]);
       }));
       function joinRoom(_x) {
         return _joinRoom.apply(this, arguments);
@@ -287,12 +296,12 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
       this.gameEngine.removeObjectFromWorld(f.id);
       w.bodyLength++;
       w.foodEaten++;
-      try {
-        if (!w.AI) this.visitor.updatePublicKeyAnalytics([{
+      if (!w.AI) {
+        this.visitor.updatePublicKeyAnalytics([{
           analyticName: "itemsEaten"
-        }]);
-      } catch (error) {
-        console.error(error);
+        }])["catch"](function (error) {
+          if (isSessionExpired(error)) console.log("Session expired, skipping 'itemsEaten' analytics");else console.error("Error updating 'itemsEaten' analytics", error);
+        });
       }
       if (f) this.addFood(f.roomName);
     }
@@ -325,17 +334,17 @@ var WiggleServerEngine = /*#__PURE__*/function (_ServerEngine) {
                 w2.bodyLength += w1.bodyLength / 4;
               }
               if (!w2.AI) {
-                try {
-                  this.visitor.updatePublicKeyAnalytics([{
-                    analyticName: "kills",
-                    profileId: this.visitor.profileId
-                  }]);
-                  this.visitor.triggerParticle({
-                    name: "balloon_float"
-                  });
-                } catch (error) {
-                  console.error(error);
-                }
+                this.visitor.updatePublicKeyAnalytics([{
+                  analyticName: "kills",
+                  profileId: this.visitor.profileId
+                }])["catch"](function (error) {
+                  if (isSessionExpired(error)) console.log("Session expired, skipping 'kills' analytics");else console.error("Error updating 'kills' analytics", error);
+                });
+                this.visitor.triggerParticle({
+                  name: "balloon_float"
+                })["catch"](function (error) {
+                  if (isSessionExpired(error)) console.log("Session expired, skipping particle trigger");else console.error("Error triggering particle", error);
+                });
               }
               this.wiggleDestroyed(w1);
             case 8:
