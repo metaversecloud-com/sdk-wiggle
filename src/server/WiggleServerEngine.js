@@ -8,6 +8,9 @@ import { addNewRowToGoogleSheets, errorHandler } from "../utils";
 import { getVisitor } from "../rtsdk";
 const nameGenerator = require("./NameGenerator");
 
+const isSessionExpired = (error) =>
+  error?.response?.status === 401 || error?.status === 401 || error?.message === "Invalid session token";
+
 export default class WiggleServerEngine extends ServerEngine {
   constructor(io, gameEngine, inputOptions) {
     super(io, gameEngine, inputOptions);
@@ -93,8 +96,8 @@ export default class WiggleServerEngine extends ServerEngine {
 
       if (!roomName) return;
 
-      const { success, visitor, isInZone } = await getVisitor(query);
-      if (!success) return socket.emit("error", message);
+      const { success, visitor, isInZone, message } = await getVisitor(query);
+      if (!success) return socket.emit("error", message || "Failed to get visitor");
       this.visitor = visitor;
 
       const { profileId, username } = visitor;
@@ -128,7 +131,10 @@ export default class WiggleServerEngine extends ServerEngine {
           this.gameEngine.addObjectToWorld(player);
           this.assignObjectToRoom(player, roomName);
 
-          this.visitor.updatePublicKeyAnalytics([{ analyticName: "starts", profileId, uniqueKey: profileId, urlSlug }]);
+          this.visitor.updatePublicKeyAnalytics([{ analyticName: "starts", profileId, uniqueKey: profileId, urlSlug }]).catch((error) => {
+            if (isSessionExpired(error)) console.log("Session expired, skipping 'starts' analytics");
+            else console.error("Error updating 'starts' analytics", error);
+          });
           addNewRowToGoogleSheets([
             {
               identityId,
@@ -145,7 +151,10 @@ export default class WiggleServerEngine extends ServerEngine {
         // User is spectating because not in private zone
         socket.emit("spectating");
       }
-      this.visitor.updatePublicKeyAnalytics([{ analyticName: "joins", profileId, uniqueKey: profileId, urlSlug }]);
+      this.visitor.updatePublicKeyAnalytics([{ analyticName: "joins", profileId, uniqueKey: profileId, urlSlug }]).catch((error) => {
+        if (isSessionExpired(error)) console.log("Session expired, skipping 'joins' analytics");
+        else console.error("Error updating 'joins' analytics", error);
+      });
     } catch (error) {
       errorHandler({
         error,
@@ -178,10 +187,11 @@ export default class WiggleServerEngine extends ServerEngine {
     this.gameEngine.removeObjectFromWorld(f.id);
     w.bodyLength++;
     w.foodEaten++;
-    try {
-      if (!w.AI) this.visitor.updatePublicKeyAnalytics([{ analyticName: "itemsEaten" }]);
-    } catch (error) {
-      console.error(error);
+    if (!w.AI) {
+      this.visitor.updatePublicKeyAnalytics([{ analyticName: "itemsEaten" }]).catch((error) => {
+        if (isSessionExpired(error)) console.log("Session expired, skipping 'itemsEaten' analytics");
+        else console.error("Error updating 'itemsEaten' analytics", error);
+      });
     }
     if (f) this.addFood(f.roomName);
   }
@@ -201,12 +211,14 @@ export default class WiggleServerEngine extends ServerEngine {
     }
 
     if (!w2.AI) {
-      try {
-        this.visitor.updatePublicKeyAnalytics([{ analyticName: "kills", profileId: this.visitor.profileId }]);
-        this.visitor.triggerParticle({ name: "balloon_float" });
-      } catch (error) {
-        console.error(error);
-      }
+      this.visitor.updatePublicKeyAnalytics([{ analyticName: "kills", profileId: this.visitor.profileId }]).catch((error) => {
+        if (isSessionExpired(error)) console.log("Session expired, skipping 'kills' analytics");
+        else console.error("Error updating 'kills' analytics", error);
+      });
+      this.visitor.triggerParticle({ name: "balloon_float" }).catch((error) => {
+        if (isSessionExpired(error)) console.log("Session expired, skipping particle trigger");
+        else console.error("Error triggering particle", error);
+      });
     }
 
     this.wiggleDestroyed(w1);
