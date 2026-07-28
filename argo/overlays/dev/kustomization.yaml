@@ -1,17 +1,14 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
 # No `namespace:` directive: the interceptor Ingress must stay in `keda`; the
 # workload resources carry no namespace and Argo injects the Application's
 # destination namespace (sdk-apps-dev).
-
 resources:
   - ../../services/wiggle0
   - wiggle0-config.yaml
   - wiggle0-sealedsecret.yaml
   - wiggle0-httpscaledobject.yaml
   - wiggle0-interceptor-ingress.yaml
-
 patches:
   # Drop the direct ALB Ingress: in dev the app is fronted through the KEDA
   # interceptor so a scaled-to-zero Deployment is woken by the first request.
@@ -24,10 +21,9 @@ patches:
       kind: Ingress
       metadata:
         name: wiggle0
-
 # Per-service image (defaults to the shared dev ECR sdk-example:<repo>; an
 # independent deployment may pin a different tag/image).
 images:
   - name: wiggle0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
-    newTag: sdk-wiggle
+    digest: sha256:2161a2b7fae5101e4e6cc29a39bab56c18a98136871e42e359d22f4a18aba649
