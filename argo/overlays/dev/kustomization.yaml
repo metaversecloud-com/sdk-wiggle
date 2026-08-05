@@ -26,4 +26,4 @@ patches:
 images:
   - name: wiggle0
     newName: 368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example
-    digest: sha256:f340a3a2c092469fcd97478d6d9b5a43f52fde4ff62c5668e2e518994f94bde4
+    digest: sha256:6e6bdfd11599fe2ea1d32b8a145fa2f68b1fe29d8004305505cf6d2ee574343b
