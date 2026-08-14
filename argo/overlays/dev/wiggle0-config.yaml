@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wiggle0-config
+  labels:
+    app.kubernetes.io/name: wiggle0
+data:
+  ANALYTICS_GA: "G-1RGVLQMNG7"
+  API_DOMAIN: "api.topia.io"
+  INSTANCE_DOMAIN: "api.topia.io"
+  INTERACTIVE_KEY: "Ph7uBFfIQjEBLGjryotB"
+  PORT: "3000"

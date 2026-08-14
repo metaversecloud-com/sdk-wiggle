@@ -1,18 +1,17 @@
 {
   "app": "sdk-wiggle",
   "env": "dev",
-  "targetRevision": "dev",
   "clusterName": "Topia-dev-SDK-Apps",
   "clusterType": "eks",
   "namespace": "sdk-apps-dev",
   "services": [
     {
-      "name": "wiggle0 wiggle0-dev-topia.topia-rtsdk.com / sdk-wiggle",
-      "image": "368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example:",
+      "name": "wiggle0",
+      "image": "368076259134.dkr.ecr.us-east-1.amazonaws.com/sdk-example:sdk-wiggle",
       "hosts": [
-        ""
+        "wiggle0-dev-topia.topia-rtsdk.com"
       ],
-      "health": ""
+      "health": "/"
     }
   ]
 }
