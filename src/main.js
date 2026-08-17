@@ -25,6 +25,8 @@ server.get("/system/health", (req, res) => {
     status: "OK",
     serverStartDate: SERVER_START_DATE,
     envs: {
+      COMMIT_HASH: process.env.COMMIT_HASH ?? "NOT SET",
+      BUILD_TIME: process.env.BUILD_TIME ?? "NOT SET",
       API_KEY: process.env.API_KEY ? "SET" : "NOT SET",
       INSTANCE_DOMAIN: process.env.INSTANCE_DOMAIN,
       INTERACTIVE_KEY: process.env.INTERACTIVE_KEY,
