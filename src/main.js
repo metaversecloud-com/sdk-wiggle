@@ -19,7 +19,8 @@ server.get("/", function (req, res) {
 
 const SERVER_START_DATE = new Date();
 
-server.get("/system/health", (req, res) => {
+// /api/system/health is the path every other SDK app serves (and the e2e harness checks).
+server.get(["/system/health", "/api/system/health"], (req, res) => {
   return res.json({
     appVersion: getVersion(),
     status: "OK",
