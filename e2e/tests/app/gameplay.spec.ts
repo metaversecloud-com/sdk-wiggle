@@ -217,7 +217,12 @@ test("a player has at most one snake at a time", async ({ page, world }) => {
 
   // The Join button disables itself, but the server accepts the event again from a modified client.
   await emitRaw(page, "requestRestart");
-  await page.waitForTimeout(1500);
+  // Sampled for a while rather than read once after a fixed wait: under load the extra snake can show up
+  // late, or spawn into the first one and both vanish again, so a single frame can miss it.
+  let most = 0;
+  for (const end = Date.now() + 3000; Date.now() < end && most < 2; await page.waitForTimeout(100)) {
+    most = Math.max(most, (await frame(page)).myHeads.length);
+  }
 
-  expect((await frame(page)).myHeads).toHaveLength(1);
+  expect(most).toBe(1);
 });
