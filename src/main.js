@@ -40,6 +40,14 @@ server.get(["/system/health", "/api/system/health"], (req, res) => {
 });
 
 server.use("/", express.static(path.join(__dirname, "../dist/")));
+
+// Prevent crashes from unhandled promise rejections (e.g., API timeouts after response sent).
+// @rtsdk/topia registers its own handler that calls process.exit(1) when it's imported: remove it first.
+process.removeAllListeners("unhandledRejection");
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled Rejection:", reason);
+});
+
 let requestHandler = server.listen(PORT, () => console.log(`Listening on ${PORT}`));
 const io = socketIO(requestHandler);
 
